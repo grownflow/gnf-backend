@@ -6,14 +6,15 @@ A boardgame.io-powered Node.js backend for the Grow-n-Flow aquaponics simulation
 
 ### Prerequisites
 
-- Node.js (v14 or higher)
-- npm or yarn
+- Node.js (v18 or higher)
+- npm
 
 ### Installation
 
-1. Navigate to the backend directory:
+1. Clone the repository:
 ```bash
-cd backend
+git clone git@github.com:grownflow/gnf-backend.git
+cd gnf-backend
 ```
 
 2. Install dependencies:
@@ -23,28 +24,53 @@ npm install
 
 ### Running the Server
 
-Run the simulation server:
+**Development mode (with auto-restart):**
 ```bash
-node src/index.js
+npm run dev
 ```
 
-The server will start at `http://localhost:4000`
+**Production mode:**
+```bash
+npm start
+```
 
-## 🧪 Testing the Server
+The servers will start at:
+- Express API server: `http://localhost:4000`
+- Boardgame.io server: `http://localhost:8000`
 
-### Health Check
+## 🧪 Testing
+
+### Run Tests
+```bash
+# Run all tests
+npm test
+
+# Run tests with coverage
+npm run test:coverage
+
+# Run tests in watch mode (development)
+npm run test:watch
+
+# Run specific test suites
+npm run test:unit
+npm run test:integration
+```
+
+### Manual Testing
+
+#### Health Check
 ```bash
 curl http://localhost:4000
 ```
 Expected response: `Aquaponics backend running.`
 
-### API Health Check
+#### API Health Check
 ```bash
 curl http://localhost:4000/api
 ```
 Expected response: `{"message":"API is running"}`
 
-### Game Testing
+#### Game Testing
 
 1. **Create a game:**
 ```bash
@@ -90,85 +116,148 @@ curl http://localhost:8000/games/aquaponics/GAME_ID
 
 ## 🏗 Architecture
 
+### Dual Server Setup
+
+- **Express API Server** (Port 4000) - REST endpoints for user management, leaderboards, game history
+- **Boardgame.io Server** (Port 8000) - Real-time game state management and multiplayer synchronization
+
 ### Core Components
 
-- **boardgame.io Server** - Handles game state management and real-time synchronization
 - **Aquaponics Simulation Engine** - Core logic for water cycles, nutrients, and plant growth
-- **REST API** - Additional endpoints for simulation data and player management
-- **Game Logic** - Move-based interactions for managing aquaponics systems
+- **Game Models** - Fish, Plants, Sensors, Trays, and AquaponicsSystem
+- **Move System** - Player actions organized by category (fish, plants, water, economy)
+- **Constants** - Equipment types, fish species, and plant varieties
 
 ## 📁 Project Structure
 
 ```
-backend/
-├── src/
-│   ├── index.js              # Server entry point
-│   ├── app.js                # Express + boardgame.io setup
-│   ├── game/
-│   │   ├── game.js           # Main game definition
-│   │   ├── moves/            # Player actions (plant, harvest, adjust)
-│   │   ├── phases/           # Game phases (growing, harvesting)
-│   │   └── simulation/       # Aquaponics simulation logic
-│   ├── api/
-│   │   ├── routes/           # REST API endpoints
-│   │   └── controllers/      # Business logic
-│   └── middleware/           # Authentication & validation
-├── package.json
-└── README.MD
+src/
+├── index.js                    # Server entry point (dual server setup)
+├── app.js                      # Express + boardgame.io configuration
+├── game/
+│   ├── game.js                 # Main game definition
+│   ├── constants/
+│   │   ├── equipment.js        # Equipment types and properties
+│   │   ├── fishTypes.js        # Fish species definitions
+│   │   └── plantTypes.js       # Plant variety definitions
+│   ├── models/
+│   │   ├── AquaponicsSystem.js # Main system model
+│   │   ├── Fish.js             # Fish entity model
+│   │   ├── Plant.js            # Plant entity model
+│   │   ├── Sensor.js           # Sensor monitoring model
+│   │   └── Tray.js             # Growing tray model
+│   ├── moves/
+│   │   ├── index.js            # Move exports
+│   │   ├── economyMoves.js     # Buying/selling actions
+│   │   ├── fishMoves.js        # Fish management actions
+│   │   ├── plantMoves.js       # Plant management actions
+│   │   └── waterMoves.js       # Water system actions
+│   └── simulation/
+│       ├── fishSimulation.js   # Fish health and behavior
+│       ├── plantGrowth.js      # Plant growth algorithms
+│       └── waterCycle.js       # Water quality simulation
+└── api/
+    ├── controllers/            # Business logic
+    └── routes/
+        └── index.js            # API route definitions
 ```
 
 ## 🎮 Game Features
 
 ### Simulation Systems
 - **Water Cycle Management** - pH, temperature, flow control
-- **Nutrient Systems** - Nitrogen cycle, feeding schedules
+- **Nutrient Systems** - Nitrogen cycle, feeding schedules  
 - **Plant Growth** - Realistic growth algorithms based on aquaponics principles
 - **Fish Management** - Fish health, feeding, waste production
+- **Equipment System** - Pumps, heaters, sensors, and monitoring tools
 
 ### Player Actions (Moves)
-- Plant seeds in grow beds
-- Harvest mature crops
-- Adjust water parameters
-- Feed fish and manage tank conditions
-- Monitor system health
+- **Plant Management** - Plant seeds, harvest crops, manage grow trays
+- **Fish Care** - Feed fish, monitor health, manage tank conditions
+- **Water Control** - Adjust pH, temperature, flow rates
+- **Economy** - Buy equipment, sell harvests, manage resources
+- **System Monitoring** - Check sensors, maintain equipment
 
 ## 🛠 API Integration
 
-### boardgame.io Endpoints
-- Game state synchronization
-- Real-time move validation
+### Boardgame.io Server (Port 8000)
+- Real-time game state synchronization
+- Move validation and execution
 - Multiplayer lobby management
+- Turn-based game flow
 
-### Custom REST Endpoints
-- `/api/simulation` - Current simulation data
-- `/api/game` - Game management
-- Health check at `/`
+### Express API Server (Port 4000)
+- Custom REST endpoints
+- User management
+- Game statistics and leaderboards
+- Health monitoring at `/`
 
 ## 🚀 Development
 
 ### Adding New Moves
 Define player actions in `src/game/moves/`:
 ```javascript
+// src/game/moves/newMoveCategory.js
 export const newMove = (G, ctx, ...args) => {
-  // Move logic here
+  // Move validation
+  if (!isValidMove(G, ctx, args)) {
+    return { ...G, error: 'Invalid move' };
+  }
+  
+  // Update game state
+  const newState = { ...G };
+  // ... move logic here
+  
+  return newState;
 };
+```
+
+### Adding New Models
+Create entity models in `src/game/models/`:
+```javascript
+// src/game/models/NewEntity.js
+class NewEntity {
+  constructor(id, properties = {}) {
+    this.id = id;
+    this.properties = properties;
+  }
+  
+  update(deltaTime) {
+    // Entity update logic
+  }
+}
+
+module.exports = NewEntity;
 ```
 
 ### Simulation Updates
 Add new simulation features in `src/game/simulation/`:
 ```javascript
-export const newSimulation = (gameState) => {
+// src/game/simulation/newSimulation.js
+export const simulateNewSystem = (gameState, deltaTime) => {
   // Simulation calculations
+  const updatedState = { ...gameState };
+  // ... simulation logic here
+  
   return updatedState;
 };
 ```
+
+## 🧪 Continuous Integration
+
+This project uses GitHub Actions for:
+- **Automated Testing** - Runs on Node.js 18.x, 20.x, and 22.x
+- **Test Coverage** - Reports coverage to Codecov
+- **Build Validation** - Ensures clean builds
+- **Deployment Pipeline** - Ready for production deployment
 
 ## 🌱 Aquaponics Simulation
 
 This backend simulates real aquaponics principles:
 - Symbiotic relationship between fish and plants
-- Nitrogen cycle management
-- Water quality monitoring
+- Nitrogen cycle management (ammonia → nitrites → nitrates)
+- Water quality monitoring (pH, temperature, dissolved oxygen)
 - Sustainable food production mechanics
+- Equipment-based system optimization
 
 Built for educational and entertainment purposes to teach aquaponics concepts through interactive gameplay.
