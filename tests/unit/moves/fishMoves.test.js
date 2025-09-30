@@ -1,64 +1,73 @@
 const fishMoves = require('../../../src/game/moves/fishMoves');
-
-/*
- * PLACEHOLDER TESTS. These tests need to change once fishMoves
- * are implemented.
- */
-
-// Mock console.log to capture output
-const mockConsoleLog = jest.spyOn(console, 'log').mockImplementation(() => {});
+const { Fish } = require('../../../src/game/models/Fish');
 
 describe('Fish Moves', () => {
   let G, ctx;
 
   beforeEach(() => {
-    // Setup basic game state and context
-    G = { fish: [], money: 500 };
-    ctx = { currentPlayer: '0' };
-    
-    // Clear console.log mock calls before each test
-    mockConsoleLog.mockClear();
+    // Setup basic game state and context matching game.js setup
+    G = {
+      fish: [],
+      plants: [],
+      waterSystem: {
+        temperature: 24,
+        ph: 7.0,
+        ammonia: 0,
+        nitrite: 0,
+        nitrate: 20,
+        oxygenLevel: 8.0
+      },
+      gameTime: 0,
+      money: 500
+    };
+    ctx = { currentPlayer: '0', turn: 1 };
   });
 
-  afterAll(() => {
-    // Restore console.log after all tests
-    mockConsoleLog.mockRestore();
+  test('addFish should add fish to game state', () => {
+    const result = fishMoves.addFish(G, ctx, 'tilapia', 5);
+    
+    expect(result.fish).toHaveLength(1);
+    expect(result.fish[0]).toBeInstanceOf(Fish);
+    expect(result.fish[0].type).toBe('tilapia');
+    expect(result.fish[0].count).toBe(5);
   });
 
-  test('feedFish should log feeding action', () => {
-    fishMoves.feedFish(G, ctx, 'fish1', 10);
+  test('feedFish should feed existing fish and advance time', () => {
+    // First add a fish
+    const addResult = fishMoves.addFish(G, ctx, 'tilapia', 3);
     
-    expect(console.log).toHaveBeenCalledWith(
-      'Player 0 fed fish fish1 with 10 food'
-    );
-    expect(console.log).toHaveBeenCalledTimes(1);
+    // Then feed it
+    const feedResult = fishMoves.feedFish(addResult, ctx, 0, 10);
+    
+    expect(feedResult.gameTime).toBe(1);
+    expect(feedResult.lastAction).toBeDefined();
+    expect(feedResult.lastAction.type).toBe('feedFish');
+    expect(feedResult.aquaponicsSystem).toBeDefined();
   });
 
-  test('addFish should log adding fish action', () => {
-    fishMoves.addFish(G, ctx, 'tilapia', 5);
+  test('feedFish should return unchanged state for invalid fish index', () => {
+    const result = fishMoves.feedFish(G, ctx, 99, 10);
     
-    expect(console.log).toHaveBeenCalledWith(
-      'Player 0 added 5 tilapia fish'
-    );
-    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(result).toBe(G); // Should return original state unchanged
   });
 
-  test('removeFish should log removing fish action', () => {
-    fishMoves.removeFish(G, ctx, 'fish2');
+  test('addTray should create aquaponics system and add tray', () => {
+    const result = fishMoves.addTray(G, ctx, 'Lettuce');
     
-    expect(console.log).toHaveBeenCalledWith(
-      'Player 0 removed fish fish2'
-    );
-    expect(console.log).toHaveBeenCalledTimes(1);
+    expect(result.aquaponicsSystem).toBeDefined();
+    expect(result.lastAction.type).toBe('addTray');
+    expect(result.lastAction.plantType).toBe('Lettuce');
   });
 
-  test('moves should not modify game state yet (placeholder behavior)', () => {
-    const originalG = { ...G };
+  test('progressTurn should advance game time and process simulation', () => {
+    // Add some fish first
+    const withFish = fishMoves.addFish(G, ctx, 'tilapia', 2);
     
-    fishMoves.feedFish(G, ctx, 'fish1', 10);
-    fishMoves.addFish(G, ctx, 'tilapia', 5);
+    const result = fishMoves.progressTurn(withFish, ctx);
     
-    // Game state should remain unchanged since moves are just placeholders
-    expect(G).toEqual(originalG);
+    expect(result.gameTime).toBe(1);
+    expect(result.aquaponicsSystem).toBeDefined();
+    expect(result.lastAction.type).toBe('progressTurn');
+    expect(result.lastAction.entry).toBeDefined();
   });
 });
