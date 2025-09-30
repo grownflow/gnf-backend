@@ -72,54 +72,61 @@ Expected response: `{"message":"API is running"}`
 
 #### Game Testing
 
-1. **Create a game:**
+1. **Create a match:**
 ```bash
-curl -X POST http://localhost:8000/games/aquaponics/create \
+curl -s -X POST http://localhost:4000/api/games/aquaponics/create \
   -H "Content-Type: application/json" \
-  -d '{"numPlayers": 1}'
+  -d '{}'
+```
+Expected response: `{"matchID":"abc123"}`
+
+2. **Set match ID (replace with your actual match ID):**
+```bash
+MATCH_ID=your_match_id_here
 ```
 
-2. **Join the game (replace GAME_ID):**
+3. **Test moves:**
+
+Add fish:
 ```bash
-curl -X POST http://localhost:8000/games/aquaponics/GAME_ID/join \
+curl -s -X POST http://localhost:4000/api/games/aquaponics/$MATCH_ID/move \
   -H "Content-Type: application/json" \
-  -d '{"playerID": "0", "playerName": "Player1"}'
+  -d '{"move":"addFish","args":["tilapia",5],"playerID":"0"}'
 ```
 
-3. **Test moves (replace GAME_ID):**
-
-Plant a seed:
+Add tray:
 ```bash
-curl -X POST http://localhost:8000/games/aquaponics/GAME_ID/move \
+curl -s -X POST http://localhost:4000/api/games/aquaponics/$MATCH_ID/move \
   -H "Content-Type: application/json" \
-  -d '{"type": "plantSeed", "args": ["lettuce", 1], "playerID": "0"}'
+  -d '{"move":"addTray","args":["Lettuce"],"playerID":"0"}'
 ```
 
 Feed fish:
 ```bash
-curl -X POST http://localhost:8000/games/aquaponics/GAME_ID/move \
+curl -s -X POST http://localhost:4000/api/games/aquaponics/$MATCH_ID/move \
   -H "Content-Type: application/json" \
-  -d '{"type": "feedFish", "args": [1, 10], "playerID": "0"}'
+  -d '{"move":"feedFish","args":[0,10],"playerID":"0"}'
 ```
 
-Buy equipment:
+Progress turn:
 ```bash
-curl -X POST http://localhost:8000/games/aquaponics/GAME_ID/move \
+curl -s -X POST http://localhost:4000/api/games/aquaponics/$MATCH_ID/move \
   -H "Content-Type: application/json" \
-  -d '{"type": "buyEquipment", "args": ["water_heater"], "playerID": "0"}'
+  -d '{"move":"progressTurn","args":[],"playerID":"0"}'
 ```
 
 4. **Check game state:**
 ```bash
-curl http://localhost:8000/games/aquaponics/GAME_ID
+curl -s http://localhost:4000/api/games/aquaponics/$MATCH_ID
 ```
+Returns: `{"G":{...game state...},"ctx":{...context...}}`
 
 ## 🏗 Architecture
 
 ### Dual Server Setup
 
-- **Express API Server** (Port 4000) - REST endpoints for user management, leaderboards, game history
-- **Boardgame.io Server** (Port 8000) - Real-time game state management and multiplayer synchronization
+- **Express API Server** (Port 4000) - REST endpoints for game moves, user management, leaderboards, game history
+- **Boardgame.io Server** (Port 8000) - Future multiplayer synchronization (currently uses Express endpoints)
 
 ### Core Components
 
@@ -157,6 +164,7 @@ src/
 │       ├── plantGrowth.js      # Plant growth algorithms
 │       └── waterCycle.js       # Water quality simulation
 └── api/
+    ├── matchHandler.js         # In-memory match management
     ├── controllers/            # Business logic
     └── routes/
         └── index.js            # API route definitions
@@ -172,25 +180,30 @@ src/
 - **Equipment System** - Pumps, heaters, sensors, and monitoring tools
 
 ### Player Actions (Moves)
-- **Plant Management** - Plant seeds, harvest crops, manage grow trays
-- **Fish Care** - Feed fish, monitor health, manage tank conditions
-- **Water Control** - Adjust pH, temperature, flow rates
-- **Economy** - Buy equipment, sell harvests, manage resources
+- **addFish** - Add fish to the aquaponics system
+- **feedFish** - Feed fish and advance simulation time
+- **addTray** - Add growing trays for plants
+- **progressTurn** - Manually advance the simulation clock
 - **System Monitoring** - Check sensors, maintain equipment
+
+### Available Moves
+- `addFish(fishType, count)` - Add fish to system
+- `feedFish(fishIndex, foodAmount)` - Feed specific fish
+- `addTray(plantType)` - Add a new growing tray  
+- `progressTurn()` - Advance game time/simulation
 
 ## 🛠 API Integration
 
-### Boardgame.io Server (Port 8000)
-- Real-time game state synchronization
-- Move validation and execution
-- Multiplayer lobby management
-- Turn-based game flow
-
 ### Express API Server (Port 4000)
-- Custom REST endpoints
-- User management
-- Game statistics and leaderboards
-- Health monitoring at `/`
+- **POST** `/api/games/aquaponics/create` - Create new match
+- **GET** `/api/games/aquaponics/:matchID` - Get current game state
+- **POST** `/api/games/aquaponics/:matchID/move` - Execute moves
+- **GET** `/api/` - API health check
+- **GET** `/` - Server health check
+
+### Boardgame.io Server (Port 8000)
+- Future multiplayer synchronization
+- Currently not used for moves (uses Express endpoints above)
 
 ## 🚀 Development
 

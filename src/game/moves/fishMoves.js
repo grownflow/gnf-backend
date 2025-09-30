@@ -1,26 +1,52 @@
-// All moves related to fish management in the aquaponics system
-// Handles feeding, adding new fish, monitoring fish health, etc.
+// Fish-related moves integrated with boardgame.io
+// Each move must return the updated G (game state)
+
+const { Fish } = require('../models/Fish');
+const { Tray } = require('../models/Tray');
+const { AquaponicsSystem } = require('../models/AquaponicsSystem');
+
+// Helper to ensure aquaponicsSystem aggregate exists in state
+function ensureSystem(G) {
+  if (!G.aquaponicsSystem) {
+    G.aquaponicsSystem = new AquaponicsSystem();
+  }
+  return G.aquaponicsSystem;
+}
 
 const fishMoves = {
-  // Feed fish in the system
-  // Parameters: fishId (specific fish or 'all'), foodAmount
-  feedFish: (G, ctx, fishId, foodAmount) => {
-    console.log(`Player ${ctx.currentPlayer} fed fish ${fishId} with ${foodAmount} food`);
-    // TODO: Find fish by ID, update health, consume food budget, affect water quality
+  addFish: (G, ctx, type, count = 1) => {
+    const id = `${type}_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+    G.fish.push(new Fish(type, count));
+    return { ...G };
   },
 
-  // Add new fish to the system
-  // Parameters: fishType (tilapia, catfish, etc.), quantity
-  addFish: (G, ctx, fishType, quantity) => {
-    console.log(`Player ${ctx.currentPlayer} added ${quantity} ${fishType} fish`);
-    // TODO: Deduct money, add fish objects with individual properties to G.fish array
+  feedFish: (G, ctx, fishIndex, foodAmount) => {
+    const fish = G.fish[fishIndex];
+    if (!fish) return G;
+    const result = fish.feed(foodAmount);
+    // Advance simulation turn when feeding occurs
+    const system = ensureSystem(G);
+    system.processTurn(G.fish);
+    // Track last action
+    G.lastAction = { type: 'feedFish', fishIndex, result };
+    G.gameTime += 1; // time advancement
+    return { ...G };
   },
 
-  // Remove fish (death, harvest, etc.)
-  // Parameters: fishId
-  removeFish: (G, ctx, fishId) => {
-    console.log(`Player ${ctx.currentPlayer} removed fish ${fishId}`);
-    // TODO: Remove fish from array, handle death vs harvest differently
+  addTray: (G, ctx, plantType) => {
+    const system = ensureSystem(G);
+    const trayId = `tray_${Date.now()}_${Math.floor(Math.random()*1000)}`;
+    system.trays[trayId] = new Tray(trayId, plantType);
+    G.lastAction = { type: 'addTray', trayId, plantType };
+    return { ...G };
+  },
+
+  progressTurn: (G, ctx) => {
+    const system = ensureSystem(G);
+    const entry = system.processTurn(G.fish);
+    G.gameTime += 1;
+    G.lastAction = { type: 'progressTurn', entry };
+    return { ...G };
   }
 };
 
