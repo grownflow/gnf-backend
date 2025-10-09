@@ -1,22 +1,20 @@
-const express = require("express");
-const { MatchHandler } = require("../matchHandler");
-const router = express.Router();
+const router = require('express').Router();
+const { MatchHandler } = require('../matchHandler');
 
-// Game match endpoints
-router.post("/games/:gameName/create", (req, res) => {
+router.post('/games/:gameName/create', async (req, res) => {
   try {
-    const result = MatchHandler.create();
+    const result = await MatchHandler.create();
     res.json(result);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 });
 
-router.get("/games/:gameName/:matchID", (req, res) => {
+router.get('/games/:gameName/:matchID', async (req, res) => {
   try {
-    const match = MatchHandler.getMatch(req.params.matchID);
+    const match = await MatchHandler.getMatch(req.params.matchID);
     if (!match) {
-      return res.status(404).json({ error: "Match not found" });
+      return res.status(404).json({ error: 'Match not found' });
     }
     res.json({ G: match.G, ctx: match.ctx });
   } catch (error) {
@@ -24,19 +22,16 @@ router.get("/games/:gameName/:matchID", (req, res) => {
   }
 });
 
-router.post("/games/:gameName/:matchID/move", (req, res) => {
+router.post('/games/:gameName/:matchID/move', async (req, res) => {
   try {
+    const { matchID } = req.params;
     const { move, args, playerID } = req.body;
-    const result = MatchHandler.makeMove(req.params.matchID, move, args || [], playerID || "0");
+    
+    const result = await MatchHandler.makeMove(matchID, move, args, playerID);
     res.json(result);
   } catch (error) {
     res.status(400).json({ error: error.message });
   }
-});
-
-// Health check for API
-router.get("/", (req, res) => {
-  res.json({ message: "API is running" });
 });
 
 module.exports = router;
