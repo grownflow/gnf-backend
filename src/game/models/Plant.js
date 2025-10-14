@@ -1,5 +1,10 @@
-// Plant model adapted for boardgame.io stateful simulation
-// Each plant tracks growth, health, and maturity influenced by water chemistry
+/*
+ * Redo plant file to match excel sheet description
+ * | Plant Species | Density | Nutrition needs, harvest time
+ * - Leafy greens (kale, lettuce) - 
+ * -
+ * 
+/*/
 
 class Plant {
 	constructor(id, type, options = {}) {

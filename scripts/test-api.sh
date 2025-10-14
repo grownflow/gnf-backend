@@ -59,7 +59,7 @@ echo ""
 # Get final state
 echo "6. Getting final state..."
 STATE=$(curl -s "$BASE_URL/$MATCH_ID")
-echo "$STATE" | head -c 200
+echo "$STATE"
 echo "..."
 echo ""
 
