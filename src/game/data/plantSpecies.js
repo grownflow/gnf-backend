@@ -24,3 +24,27 @@
  * See more on Nutrient needs_growth sheet in Game scenarios_backstories_technical component decisions Excel file
  */
 
+const plantSpecies = {
+    ParrisIslandRomaine: {
+        density: 16,
+        growthPeriod: 4,
+        category: 'leafy_green',
+        nutritionNeeds: 50,
+        proteinRequirement: 32,
+        valuePerHead: 2.00,
+        valuePerM2: 32.00,
+        valuePerM2PerWeek: 8.00,
+        tempRange: { min: 10, max: 24, optimal: { min: 15, max: 20 } },
+        pHRange: { min: 6.0, max: 7.0, optimal: 6.5 },
+        lightHours: 12,
+        harvestWeight: 300,
+        seedToTransplant: 2,
+        transplantToHarvest: 4,
+        totalGrowthTime: 6,
+        marketAcceptance: 'excellent',
+        shelfLife: 7,
+        availability: 'year-round'
+    }
+};
+
+module.exports = { plantSpecies };
