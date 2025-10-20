@@ -8,6 +8,7 @@ const fishMoves = require('./fishMoves');
 const plantMoves = require('./plantMoves');
 const waterMoves = require('./waterMoves');
 const economyMoves = require('./economyMoves');
+const systemMoves = require('./systemMoves');
 
 
 // Central export file for all game moves
