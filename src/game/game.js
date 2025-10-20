@@ -3,6 +3,7 @@
 
 // Import all moves from the moves directory
 const moves = require('./moves');
+const { AquaponicsSystem } = require('./models/AquaponicsSystem');
 
 const AquaponicsGame = {
   // Game identifier - used in API endpoints (/games/aquaponics/...)
@@ -11,20 +12,12 @@ const AquaponicsGame = {
   // Initial game state when a new game is created
   // This represents a fresh aquaponics system with no fish or plants
   setup: () => ({
-
     // Individual entities as arrays - each fish/plant is a separate object
     fish: [],     // Array of fish objects with individual properties
     plants: [],   // Array of plant objects in various grow beds
     
-    // System-wide parameters that affect all entities
-    waterSystem: {
-        temperature: 24,    // Celsius - affects fish health and plant growth
-        ph: 7.0,           // pH level - critical for both fish and plants
-        ammonia: 0,        // Toxic to fish - produced by fish waste
-        nitrite: 0,        // Intermediate in nitrogen cycle
-        nitrate: 20,       // Plant nutrient - end product of nitrogen cycle
-        oxygenLevel: 8.0   // Dissolved oxygen - critical for fish survival
-    },
+    // Core aquaponics system with Tank, GrowBeds, Light
+    aquaponicsSystem: new AquaponicsSystem(),
 
     // Game mechanics and player resources
     gameTime: 0,    // DAYS since game start
@@ -34,11 +27,9 @@ const AquaponicsGame = {
   // Import all moves from the modular move files
   // This keeps the main game file clean while allowing complex move logic
   moves
-
   // Turn structure and phases can be added here as the game grows
   // turn: { ... }, only need turns if multiplayer added.
   // phases: { ... }, used for diff game states that allow diff moves
-  // Potentially could utilize phases for seasons?
 };
 
 // Export the game so it can be used by the boardgame.io server

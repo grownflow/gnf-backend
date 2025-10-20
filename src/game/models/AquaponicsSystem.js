@@ -1,78 +1,65 @@
-const { Sensor } = require('./Sensor');
-
-class WaterChemistry {
-	constructor() {
-		this.ammonia = 0;
-		this.nitrite = 0;
-		this.nitrate = 10;
-		this.pH = 7.0;
-		this.temperature = 22;
-	}
-
-	update(ammoniaInput, plantAbsorption, biofilterEfficiency) {
-		this.ammonia += ammoniaInput;
-		this.nitrite = this.ammonia * biofilterEfficiency;
-		this.nitrate += this.nitrite * biofilterEfficiency;
-		this.ammonia = 0;
-		this.nitrite = 0;
-		this.pH -= 0.01 * (ammoniaInput - plantAbsorption);
-		this.pH = Math.max(6.0, Math.min(8.0, this.pH));
-	}
-}
+const { Tank } = require('./Tank');
+const { GrowBed } = require('./GrowBed');
+const { Light } = require('./Light');
 
 class AquaponicsSystem {
-	constructor() {
-		this.fish = {};   // fishId -> fish entity (Fish model kept external in state arrays or future ref)
-		this.trays = {};  // trayId -> Tray
-		this.water = new WaterChemistry();
-		this.biofilterEfficiency = 0.8;
-		this.turn = 0;
-		this.log = [];
+  constructor() {
+    this.id = `system_${Date.now()}`;
+    this.tank = new Tank(1000);
+    this.growBeds = {}; // bedId -> GrowBed
+    this.light = new Light();
+    this.log = [];
+  }
 
-		this.sensors = {
-			temperature: new Sensor('Temperature', () => this.water.temperature),
-			pH: new Sensor('pH', () => this.water.pH),
-			ammonia: new Sensor('Ammonia', () => this.water.ammonia),
-			nitrate: new Sensor('Nitrate', () => this.water.nitrate)
-		};
-	}
+  addGrowBed(bedId, plantType, capacity = 16) {
+    const bed = new GrowBed(bedId, plantType, capacity);
+    this.growBeds[bedId] = bed;
+    return bed;
+  }
 
-	getAveragePlantSize() {
-		const trays = Object.values(this.trays);
-		if (!trays.length) return 0;
-		return trays.reduce((sum, t) => sum + t.getAverageSize(), 0) / trays.length;
-	}
+  getGrowBed(bedId) {
+    return this.growBeds[bedId] || null;
+  }
 
-	processTurn(fishEntities) {
-		this.turn++;
-		// Waste production
-		const ammoniaProduced = fishEntities.reduce((acc, f) => acc + (f.count * f.ammoniaProductionRate), 0);
-		// Plant absorption potential (simplified)
-		const potentialAbsorption = Object.values(this.trays).reduce((sum, tray) => sum + (Object.keys(tray.plants).length * 0.05), 0);
-		// Grow plants + actual nutrient usage
-		let totalPlantGrowth = 0;
-		let totalNutrientsUsed = 0;
-		Object.values(this.trays).forEach(tray => {
-			const { totalGrowth, totalNutrients } = tray.growAll(this.water);
-			totalPlantGrowth += totalGrowth;
-			totalNutrientsUsed += totalNutrients;
-		});
-		// Update water chemistry
-		this.water.update(ammoniaProduced, totalNutrientsUsed, this.biofilterEfficiency);
+  processTurn(fishEntities = [], plants = []) {
 
-		const entry = {
-			turn: this.turn,
-			timestamp: new Date().toISOString(),
-			temperature: this.sensors.temperature.read(),
-			pH: this.sensors.pH.read(),
-			ammonia: this.sensors.ammonia.read(),
-			nitrate: this.sensors.nitrate.read(),
-			avgPlantSize: +this.getAveragePlantSize().toFixed(2),
-			plantGrowth: +totalPlantGrowth.toFixed(2)
-		};
-		this.log.push(entry);
-		return entry;
-	}
+    // Calculate total nutrition usage from all grow beds
+    let totalNutritionUsage = 0;
+    Object.values(this.growBeds).forEach(bed => {
+      totalNutritionUsage += bed.calculateNutrientDemand();
+    });
+
+    // Let Tank process with fish ammonia and plant nutrition usage
+    const tankEntry = this.tank.processTurn(fishEntities, totalNutritionUsage);
+
+    // Grow plants in all beds
+    let totalPlantGrowth = 0;
+    Object.values(this.growBeds).forEach(bed => {
+      const result = bed.growAll(this.tank.water.getStatus());
+      totalPlantGrowth += result.totalGrowth;
+    });
+
+    const entry = {
+      timestamp: new Date().toISOString(),
+      waterStatus: this.tank.water.getStatus(),
+      totalPlantGrowth: Number(totalPlantGrowth.toFixed(2)),
+      totalNutritionUsage: Number(totalNutritionUsage.toFixed(3)),
+      growBedCount: Object.keys(this.growBeds).length,
+      light: this.light.getStatus()
+    };
+
+    this.log.push(entry);
+    return entry;
+  }
+
+  getStatus() {
+    return {
+      id: this.id,
+      tank: this.tank.getStatus(),
+      growBeds: Object.values(this.growBeds).map(bed => bed.getStatus()),
+      light: this.light.getStatus()
+    };
+  }
 }
 
-module.exports = { AquaponicsSystem, WaterChemistry };
+module.exports = { AquaponicsSystem };

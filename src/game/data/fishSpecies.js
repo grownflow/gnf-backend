@@ -19,7 +19,6 @@ const fishSpecies = {
     consumerAcceptance: 'good',
     ammoniaProductionRate: 0.1,
     foodConsumptionRate: 0.2,
-    baseGrowthRate: harvestWeight / harvestTime
   },
   
   barramundi: {
@@ -34,7 +33,6 @@ const fishSpecies = {
     consumerAcceptance: 'good',
     ammoniaProductionRate: 0.08,
     foodConsumptionRate: 0.25,
-    baseGrowthRate: harvestWeight / harvestTime 
   }
 };
 

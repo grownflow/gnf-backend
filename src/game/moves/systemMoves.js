@@ -6,7 +6,7 @@ const systemMoves = {
       G.aquaponicsSystem = new AquaponicsSystem();
     }
     
-    const entry = G.aquaponicsSystem.processTurn(G.fish);
+    const entry = G.aquaponicsSystem.processTurn();
     G.gameTime += 1 /* Day */;
     G.lastAction = { type: 'progressTurn', entry };
     return { ...G };
