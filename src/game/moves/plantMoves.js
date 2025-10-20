@@ -20,12 +20,25 @@ const plantMoves = {
   // Harvest mature plants
   // Parameters: plantId
   harvestPlant: (G, ctx, plantId) => {
-    console.log(`Player ${ctx.currentPlayer} harvested plant ${plantId}`);
-    // TODO: Find plant, check if mature, remove from array, add money
+    const plantIndex = G.plants.findIndex(p => p.id === plantId);
+    if (plantIndex === -1) {
+      return G;
+    }
+
+    const plant = G.plants[plantIndex];
+    const result = plant.harvest();
+
+    if (result.success) {
+      G.money += result.value;
+      // TODO: G.inventory.push(result) IF inventory system added
+      G.plants.splice(plantIndex, 1);
+    }
+
+    return { ...G };
   },
 
-  // Care for plants (pruning, disease treatment)
-  // Parameters: plantId, careType
+  // Not crucial to the prototype right now.
+  // May handle this a different way
   carePlant: (G, ctx, plantId, careType) => {
     console.log(`Player ${ctx.currentPlayer} performed ${careType} on plant ${plantId}`);
     // TODO: Improve plant health, cost energy/money
