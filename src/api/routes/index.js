@@ -1,6 +1,10 @@
 const router = require('express').Router();
 const { MatchHandler } = require('../matchHandler');
 
+router.get('/', (req, res) => {
+  res.json({ message: 'API is running' });
+});
+
 router.post('/games/:gameName/create', async (req, res) => {
   try {
     const result = await MatchHandler.create();
