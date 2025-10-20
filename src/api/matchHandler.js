@@ -2,12 +2,18 @@ const { getCollection } = require('../db');
 const { AquaponicsGame } = require('../game/game');
 const { Fish } = require('../game/models/Fish');
 const { AquaponicsSystem } = require('../game/models/AquaponicsSystem');
+const { Tank } = require('../game/models/Tank');
+const { GrowBed } = require('../game/models/GrowBed');
+const { Light } = require('../game/models/Light');
+const { WaterChemistry } = require('../game/models/WaterChemistry');
 
 class MatchHandler {
   // Reconstruct class instances from plain objects
   static deserializeGameState(G) {
     const deserialized = {
       ...G,
+      gameTime: G.gameTime || 0,
+      money: G.money || 500,
       fish: (G.fish || []).map(f => 
         Object.assign(new Fish(f.type, f.count), f)
       ),
@@ -16,12 +22,41 @@ class MatchHandler {
     // Reconstruct AquaponicsSystem if it exists
     if (G.aquaponicsSystem) {
       const sys = new AquaponicsSystem();
-      Object.assign(sys, G.aquaponicsSystem);
       
-      // Reconstruct trays and plants within the system
-      if (G.aquaponicsSystem.trays) {
-        sys.trays = G.aquaponicsSystem.trays;
+      // Reconstruct Tank with WaterChemistry
+      if (G.aquaponicsSystem.tank) {
+        const tank = new Tank(G.aquaponicsSystem.tank.volumeLiters || 1000);
+        if (G.aquaponicsSystem.tank.water) {
+          const water = new WaterChemistry();
+          Object.assign(water, G.aquaponicsSystem.tank.water);
+          tank.water = water;
+        }
+        tank.biofilterEfficiency = G.aquaponicsSystem.tank.biofilterEfficiency || 0.8;
+        tank.turn = G.aquaponicsSystem.tank.turn || 0;
+        tank.log = G.aquaponicsSystem.tank.log || [];
+        sys.tank = tank;
       }
+      
+      // Reconstruct GrowBeds
+      if (G.aquaponicsSystem.growBeds) {
+        sys.growBeds = {};
+        for (const [bedId, bedData] of Object.entries(G.aquaponicsSystem.growBeds)) {
+          const bed = new GrowBed(bedData.id, bedData.plantType, bedData.capacity);
+          Object.assign(bed, bedData);
+          sys.growBeds[bedId] = bed;
+        }
+      }
+      
+      // Reconstruct Light
+      if (G.aquaponicsSystem.light) {
+        const light = new Light();
+        Object.assign(light, G.aquaponicsSystem.light);
+        sys.light = light;
+      }
+      
+      // Copy remaining properties
+      sys.turn = G.aquaponicsSystem.turn || 0;
+      sys.log = G.aquaponicsSystem.log || [];
       
       deserialized.aquaponicsSystem = sys;
     }
