@@ -6,7 +6,6 @@
 
 const fishMoves = require('./fishMoves');
 const plantMoves = require('./plantMoves');
-const waterMoves = require('./waterMoves');
 const economyMoves = require('./economyMoves');
 const systemMoves = require('./systemMoves');
 
@@ -19,7 +18,6 @@ const systemMoves = require('./systemMoves');
 module.exports = {
   ...fishMoves,
   ...plantMoves,
-  ...waterMoves,
   ...economyMoves,
   ...systemMoves
 };
