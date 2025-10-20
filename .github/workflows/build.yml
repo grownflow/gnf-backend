@@ -8,6 +8,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
+    services:
+      mongodb:
+        image: mongo:7
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
     steps:
     - uses: actions/checkout@v4
     
@@ -22,9 +33,17 @@ jobs:
       run: |
         npm ci
     
+    - name: Wait for MongoDB to be ready
+      run: |
+        npm install -g wait-on
+        wait-on tcp:27017 --timeout 10000
+    
     - name: Run all tests
       run: |
         npm test
+      env:
+        MONGO_URI: mongodb://localhost:27017
+        DB_NAME: aquaponics_test
     
     # - name: Build for production
     #   run: |
