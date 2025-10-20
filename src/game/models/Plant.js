@@ -26,6 +26,33 @@ class Plant {
   getMarketValue() {
     return this.canHarvest() ? this.species.valuePerHead : 0;
   }
+
+  harvest() {
+    // TODO: Future inventory system
+    // When implemented, this should:
+    // - Add plant to player inventory with shelf life countdown
+    // - Track quantity and weight
+    // - Enable player to bundle for sale or use in recipes
+    
+    if (!this.canHarvest()) {
+      return {
+        success: false,
+        reason: 'Plant not ready for harvest',
+        value: 0
+      };
+    }
+
+    const harvestValue = this.getMarketValue();
+
+    return {
+      success: true,
+      value: harvestValue,
+      type: this.type,
+      quantity: 1
+      // TODO: Add to inventory system future
+      // inventory: { type: this.type, quantity: 1, shelfLife: this.species.shelfLife }
+    };
+  }
 }
 
 module.exports = { Plant };
