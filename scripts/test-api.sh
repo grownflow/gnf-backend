@@ -32,14 +32,6 @@ curl -s -X POST "$BASE_URL/$MATCH_ID/move" \
 echo "..."
 echo ""
 
-# Add tray
-echo "3. Adding tray..."
-curl -s -X POST "$BASE_URL/$MATCH_ID/move" \
-  -H 'Content-Type: application/json' \
-  -d '{"move":"addTray","args":["Lettuce"],"playerID":"0"}' | head -c 100
-echo "..."
-echo ""
-
 # Feed fish
 echo "4. Feeding fish..."
 curl -s -X POST "$BASE_URL/$MATCH_ID/move" \

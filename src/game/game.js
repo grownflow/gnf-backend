@@ -11,6 +11,7 @@ const AquaponicsGame = {
   // Initial game state when a new game is created
   // This represents a fresh aquaponics system with no fish or plants
   setup: () => ({
+
     // Individual entities as arrays - each fish/plant is a separate object
     fish: [],     // Array of fish objects with individual properties
     plants: [],   // Array of plant objects in various grow beds
@@ -26,7 +27,7 @@ const AquaponicsGame = {
     },
 
     // Game mechanics and player resources
-    gameTime: 0,    // Hours since game start - used for growth calculations
+    gameTime: 0,    // DAYS since game start
     money: 500      // Player currency for purchases and upgrades
   }),
 
@@ -35,9 +36,9 @@ const AquaponicsGame = {
   moves
 
   // Turn structure and phases can be added here as the game grows
-  // turn: { ... }
-  // phases: { ... }
-  // endIf: { ... }
+  // turn: { ... }, only need turns if multiplayer added.
+  // phases: { ... }, used for diff game states that allow diff moves
+  // Potentially could utilize phases for seasons?
 };
 
 // Export the game so it can be used by the boardgame.io server

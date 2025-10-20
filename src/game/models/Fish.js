@@ -1,6 +1,8 @@
 const { fishSpecies } = require('../data/fishSpecies');
 const { EnvironmentalStress } = require('../utils/environmentalStress');
 
+// revisit size mechanics to match weight (g) more closely
+
 class Fish {
   constructor(type, count) {
     this.type = type;
