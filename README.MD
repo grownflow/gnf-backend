@@ -34,9 +34,7 @@ npm run dev
 npm start
 ```
 
-The servers will start at:
-- Express API server: `http://localhost:4000`
-- Boardgame.io server: `http://localhost:8000`
+The servers will start at `http://localhost:4000`
 
 ## 🧪 Testing
 
@@ -126,71 +124,13 @@ Returns: `{"G":{...game state...},"ctx":{...context...}}`
 ### Dual Server Setup
 
 - **Express API Server** (Port 4000) - REST endpoints for game moves, user management, leaderboards, game history
-- **Boardgame.io Server** (Port 8000) - Future multiplayer synchronization (currently uses Express endpoints)
 
 ### Core Components
 
 - **Aquaponics Simulation Engine** - Core logic for water cycles, nutrients, and plant growth
-- **Game Models** - Fish, Plants, Sensors, Trays, and AquaponicsSystem
-- **Move System** - Player actions organized by category (fish, plants, water, economy)
-- **Constants** - Equipment types, fish species, and plant varieties
-
-## 📁 Project Structure
-
-```
-src/
-├── index.js                    # Server entry point (dual server setup)
-├── app.js                      # Express + boardgame.io configuration
-├── game/
-│   ├── game.js                 # Main game definition
-│   ├── constants/
-│   │   ├── equipment.js        # Equipment types and properties
-│   │   ├── fishTypes.js        # Fish species definitions
-│   │   └── plantTypes.js       # Plant variety definitions
-│   ├── models/
-│   │   ├── AquaponicsSystem.js # Main system model
-│   │   ├── Fish.js             # Fish entity model
-│   │   ├── Plant.js            # Plant entity model
-│   │   ├── Sensor.js           # Sensor monitoring model
-│   │   └── Tray.js             # Growing tray model
-│   ├── moves/
-│   │   ├── index.js            # Move exports
-│   │   ├── economyMoves.js     # Buying/selling actions
-│   │   ├── fishMoves.js        # Fish management actions
-│   │   ├── plantMoves.js       # Plant management actions
-│   │   └── waterMoves.js       # Water system actions
-│   └── simulation/
-│       ├── fishSimulation.js   # Fish health and behavior
-│       ├── plantGrowth.js      # Plant growth algorithms
-│       └── waterCycle.js       # Water quality simulation
-└── api/
-    ├── matchHandler.js         # In-memory match management
-    ├── controllers/            # Business logic
-    └── routes/
-        └── index.js            # API route definitions
-```
-
-## 🎮 Game Features
-
-### Simulation Systems
-- **Water Cycle Management** - pH, temperature, flow control
-- **Nutrient Systems** - Nitrogen cycle, feeding schedules  
-- **Plant Growth** - Realistic growth algorithms based on aquaponics principles
-- **Fish Management** - Fish health, feeding, waste production
-- **Equipment System** - Pumps, heaters, sensors, and monitoring tools
-
-### Player Actions (Moves)
-- **addFish** - Add fish to the aquaponics system
-- **feedFish** - Feed fish and advance simulation time
-- **addTray** - Add growing trays for plants
-- **progressTurn** - Manually advance the simulation clock
-- **System Monitoring** - Check sensors, maintain equipment
-
-### Available Moves
-- `addFish(fishType, count)` - Add fish to system
-- `feedFish(fishIndex, foodAmount)` - Feed specific fish
-- `addTray(plantType)` - Add a new growing tray  
-- `progressTurn()` - Advance game time/simulation
+- **Game Models** - Fish, Plants, Sensors, Lights, Grow Beds, and AquaponicsSystem
+- **Move System** - Player actions organized by category (fish, plants, economy, system)
+- **Constants** - Fish species and plant varieties
 
 ## 🛠 API Integration
 
@@ -204,57 +144,6 @@ src/
 ### Boardgame.io Server (Port 8000)
 - Future multiplayer synchronization
 - Currently not used for moves (uses Express endpoints above)
-
-## 🚀 Development
-
-### Adding New Moves
-Define player actions in `src/game/moves/`:
-```javascript
-// src/game/moves/newMoveCategory.js
-export const newMove = (G, ctx, ...args) => {
-  // Move validation
-  if (!isValidMove(G, ctx, args)) {
-    return { ...G, error: 'Invalid move' };
-  }
-  
-  // Update game state
-  const newState = { ...G };
-  // ... move logic here
-  
-  return newState;
-};
-```
-
-### Adding New Models
-Create entity models in `src/game/models/`:
-```javascript
-// src/game/models/NewEntity.js
-class NewEntity {
-  constructor(id, properties = {}) {
-    this.id = id;
-    this.properties = properties;
-  }
-  
-  update(deltaTime) {
-    // Entity update logic
-  }
-}
-
-module.exports = NewEntity;
-```
-
-### Simulation Updates
-Add new simulation features in `src/game/simulation/`:
-```javascript
-// src/game/simulation/newSimulation.js
-export const simulateNewSystem = (gameState, deltaTime) => {
-  // Simulation calculations
-  const updatedState = { ...gameState };
-  // ... simulation logic here
-  
-  return updatedState;
-};
-```
 
 ## 🧪 Continuous Integration
 

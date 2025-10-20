@@ -1,23 +1,49 @@
+const { fishSpecies } = require('../data/fishSpecies');
+const { EnvironmentalStress } = require('../utils/environmentalStress');
+
+// revisit size mechanics to match weight (g) more closely
+
 class Fish {
   constructor(type, count) {
     this.type = type;
     this.count = count;
-    this.ammoniaProductionRate = 0.1;
-    this.foodConsumptionRate = 0.2;
-    this.growthRate = 0.05;
     this.health = 10;
     this.size = 1.0;
+    this.age = 0;
+    
+    // Get species parameters
+    this.species = fishSpecies[type.toLowerCase()];
+    if (!this.species) {
+      throw new Error(`Unknown fish species: ${type}`);
+    }
+    
+    // Set species-specific rates
+    this.ammoniaProductionRate = this.species.ammoniaProductionRate;
+    this.foodConsumptionRate = this.species.foodConsumptionRate;
+    this.growthRate = this.species.baseGrowthRate;
   }
 
-  // placeholder logic. this method will be changed. 
-  feed(foodAvailable) {
+  feed(foodAvailable, waterConditions = {}) {
+    const { temperature = 25, ammonia = 0, oxygen = 8 } = waterConditions;
+    
     const requiredFood = this.count * this.foodConsumptionRate;
     const foodRatio = Math.min(foodAvailable / requiredFood, 1);
-    const growth = this.count * this.growthRate * foodRatio;
+    
+    // Calculate environmental stress
+    const stress = EnvironmentalStress.calculateOverallStress(
+      temperature, ammonia, oxygen, this.species
+    );
+    
+    const stressFactor = 1 - stress.overall;
+    const growth = this.growthRate * foodRatio * stressFactor * this.count;
+    
     this.size += growth;
+    this.age += 1;
 
-    if (foodRatio < 0.8) {
-      this.health -= (1 - foodRatio) * 2;
+    // Update health
+    if (foodRatio < 0.8 || stress.overall > 0.3) {
+      const healthLoss = (1 - foodRatio) * 2 + stress.overall * 3;
+      this.health -= healthLoss;
     } else {
       this.health = Math.min(10, this.health + 0.5);
     }
@@ -26,12 +52,28 @@ class Fish {
     
     return {
       foodUsed: requiredFood * foodRatio,
-      growth: growth
+      growth: growth,
+      stressFactor: stressFactor,
+      stress: stress
     };
   }
 
   produceWaste() {
-    return this.count * this.ammoniaProductionRate;
+    const sizeMultiplier = this.size / 1.0;
+    return this.count * this.ammoniaProductionRate * sizeMultiplier;
+  }
+
+  isHarvestable() {
+    return this.size >= this.species.harvestWeight * 0.8;
+  }
+
+  getMarketValue() {
+    if (!this.isHarvestable()) return 0;
+    
+    const weightInPounds = (this.size / 1000) * 2.20462;
+    const healthMultiplier = this.health / 10;
+    
+    return this.count * weightInPounds * this.species.marketValue * healthMultiplier;
   }
 }
 

@@ -1,6 +1,7 @@
 const request = require('supertest');
 const express = require('express');
 const routes = require('../../../src/api/routes/index');
+const { close } = require('../../../src/db');
 
 // Create a test app with the routes
 const app = express();
@@ -9,6 +10,10 @@ app.use('/api', routes);
 
 describe('API Routes', () => {
   let matchID;
+
+  afterAll(async () => {
+    await close();
+  });
 
   test('GET /api should return API status message', async () => {
     const response = await request(app)

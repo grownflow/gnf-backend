@@ -1,3 +1,7 @@
+/*
+ *  
+ */
+
 class Sensor {
 	constructor(name, readFn, noiseLevel = 0.01) {
 		this.name = name;

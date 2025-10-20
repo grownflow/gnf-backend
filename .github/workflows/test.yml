@@ -14,6 +14,17 @@ jobs:
       matrix:
         node-version: [18.x, 20.x, 22.x]
 
+    services:
+      mongodb:
+        image: mongo:7
+        options: >-
+          --health-cmd mongosh
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 27017:27017
+
     steps:
     - uses: actions/checkout@v4
     
@@ -28,17 +39,31 @@ jobs:
       run: |
         npm ci
     
+    - name: Wait for MongoDB to be ready
+      run: |
+        npm install -g wait-on
+        wait-on tcp:27017 --timeout 10000
+    
     - name: Run unit tests
       run: |
         npm run test:unit
+      env:
+        MONGO_URI: mongodb://localhost:27017
+        DB_NAME: aquaponics_test
     
     - name: Run integration tests
       run: |
         npm run test:integration
+      env:
+        MONGO_URI: mongodb://localhost:27017
+        DB_NAME: aquaponics_test
     
     - name: Run coverage
       run: |
         npm run test:coverage
+      env:
+        MONGO_URI: mongodb://localhost:27017
+        DB_NAME: aquaponics_test
     
     - name: Upload coverage to Codecov
       uses: codecov/codecov-action@v4

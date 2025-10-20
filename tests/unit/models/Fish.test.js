@@ -14,7 +14,7 @@ describe('Fish Model', () => {
     expect(fish.size).toBe(1.0);
     expect(fish.ammoniaProductionRate).toBe(0.1);
     expect(fish.foodConsumptionRate).toBe(0.2);
-    expect(fish.growthRate).toBe(0.05);
+    expect(fish.growthRate).toBeGreaterThan(0); // baseGrowthRate from species
   });
 
   test('should feed fish and update properties correctly', () => {

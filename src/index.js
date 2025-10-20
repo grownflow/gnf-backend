@@ -1,12 +1,25 @@
-const { app, bgioServer} = require("./app");
-const PORT = process.env.PORT || 4000;
+const { app, bgioServer } = require("./app");
+const { connect } = require('./db');
 
-// API routes for user management, leaderboards, etc
-app.listen(PORT, () => {
-  console.log(`Server at http://localhost:${PORT}`);
-});
+require('dotenv').config();
 
-// Board game io server that powers Grow N' Flow
-bgioServer.run(8000, () => {
-  console.log(`Boardgame.io server at http://localhost:8000`);
-})
+async function start() {
+  try {
+    // Connect to MongoDB first
+    await connect();
+    
+    // Then start servers
+    app.listen(4000, () => {
+      console.log('Express API running on http://localhost:4000');
+    });
+
+    bgioServer.run(8000, () => {
+      console.log('Boardgame.io server on http://localhost:8000');
+    });
+  } catch (error) {
+    console.error('Startup failed:', error);
+    process.exit(1);
+  }
+}
+
+start();
