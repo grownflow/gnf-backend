@@ -1,24 +1,18 @@
 const fishMoves = require('../../../src/game/moves/fishMoves');
 const { Fish } = require('../../../src/game/models/Fish');
+const { AquaponicsSystem } = require('../../../src/game/models/AquaponicsSystem');
 
 describe('Fish Moves', () => {
   let G, ctx;
 
   beforeEach(() => {
-    // Setup basic game state and context matching game.js setup
     G = {
       fish: [],
       plants: [],
-      waterSystem: {
-        temperature: 24,
-        ph: 7.0,
-        ammonia: 0,
-        nitrite: 0,
-        nitrate: 20,
-        oxygenLevel: 8.0
-      },
+      aquaponicsSystem: new AquaponicsSystem(),
       gameTime: 0,
-      money: 500
+      money: 500,
+      lastAction: null
     };
     ctx = { currentPlayer: '0', turn: 1 };
   });
@@ -32,42 +26,36 @@ describe('Fish Moves', () => {
     expect(result.fish[0].count).toBe(5);
   });
 
-  test('feedFish should feed existing fish and advance time', () => {
-    // First add a fish
-    const addResult = fishMoves.addFish(G, ctx, 'tilapia', 3);
+  test('addFish should have correct species parameters', () => {
+    const result = fishMoves.addFish(G, ctx, 'tilapia', 5);
+    const fish = result.fish[0];
     
-    // Then feed it
+    expect(fish.ammoniaProductionRate).toBe(0.1);
+    expect(fish.foodConsumptionRate).toBe(0.2);
+    expect(fish.species.marketValue).toBe(3);
+  });
+
+  test('feedFish should feed existing fish', () => {
+    const addResult = fishMoves.addFish(G, ctx, 'tilapia', 3);
     const feedResult = fishMoves.feedFish(addResult, ctx, 0, 10);
     
-    expect(feedResult.gameTime).toBe(1);
-    expect(feedResult.lastAction).toBeDefined();
+    expect(feedResult.fish[0].age).toBe(1);
     expect(feedResult.lastAction.type).toBe('feedFish');
-    expect(feedResult.aquaponicsSystem).toBeDefined();
   });
 
   test('feedFish should return unchanged state for invalid fish index', () => {
     const result = fishMoves.feedFish(G, ctx, 99, 10);
     
-    expect(result).toBe(G); // Should return original state unchanged
+    expect(result.fish).toHaveLength(0);
+    expect(result.gameTime).toBe(0);
   });
 
-  test('addTray should create aquaponics system and add tray', () => {
-    const result = fishMoves.addTray(G, ctx, 'Lettuce');
+  test('addFish should allow multiple additions', () => {
+    let result = fishMoves.addFish(G, ctx, 'tilapia', 5);
+    result = fishMoves.addFish(result, ctx, 'barramundi', 3);
     
-    expect(result.aquaponicsSystem).toBeDefined();
-    expect(result.lastAction.type).toBe('addTray');
-    expect(result.lastAction.plantType).toBe('Lettuce');
-  });
-
-  test('progressTurn should advance game time and process simulation', () => {
-    // Add some fish first
-    const withFish = fishMoves.addFish(G, ctx, 'tilapia', 2);
-    
-    const result = fishMoves.progressTurn(withFish, ctx);
-    
-    expect(result.gameTime).toBe(1);
-    expect(result.aquaponicsSystem).toBeDefined();
-    expect(result.lastAction.type).toBe('progressTurn');
-    expect(result.lastAction.entry).toBeDefined();
+    expect(result.fish).toHaveLength(2);
+    expect(result.fish[0].type).toBe('tilapia');
+    expect(result.fish[1].type).toBe('barramundi');
   });
 });

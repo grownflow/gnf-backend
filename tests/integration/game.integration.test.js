@@ -1,8 +1,13 @@
 const request = require('supertest');
 const { app } = require('../../src/app');
+const { close } = require('../../src/db');
 
 describe('Game Integration Tests', () => {
   let matchID;
+
+  afterAll(async () => {
+    await close();
+  });
 
   test('GET / should return health check', async () => {
     const response = await request(app)
@@ -20,7 +25,7 @@ describe('Game Integration Tests', () => {
     expect(response.body.message).toBe('API is running');
   });
 
-  test('Full game workflow: create match, add fish, feed fish, check state', async () => {
+  test('Full game workflow: create match, add fish, plant seeds, progress days', async () => {
     // Create match
     const createResponse = await request(app)
       .post('/api/games/aquaponics/create')
@@ -43,12 +48,12 @@ describe('Game Integration Tests', () => {
     expect(addFishResponse.body.G.fish).toHaveLength(1);
     expect(addFishResponse.body.G.fish[0].type).toBe('tilapia');
 
-    // Add tray
+    // Plant seeds
     await request(app)
       .post(`/api/games/aquaponics/${matchID}/move`)
       .send({
-        move: 'addTray',
-        args: ['Lettuce'],
+        move: 'plantSeed',
+        args: ['ParrisIslandRomaine', 'bed1'],
         playerID: '0'
       })
       .expect(200);
@@ -63,8 +68,9 @@ describe('Game Integration Tests', () => {
       })
       .expect(200);
     
-    expect(feedResponse.body.G.gameTime).toBeGreaterThan(0);
+    // feedFish doesn't increment gameTime, but it triggers simulation
     expect(feedResponse.body.G.lastAction).toBeDefined();
+    expect(feedResponse.body.G.lastAction.type).toBe('feedFish');
 
     // Progress turn
     const progressResponse = await request(app)

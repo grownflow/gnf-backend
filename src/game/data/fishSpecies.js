@@ -14,6 +14,7 @@ const fishSpecies = {
     proteinRequirement: { min: 28, max: 32 },
     harvestWeight: 600,
     harvestTime: 210, // in days
+    baseGrowthRate: 600 / 210, // ~2.86 per day
     marketValue: 3.00,
     availability: 'year-round',
     consumerAcceptance: 'good',
@@ -28,6 +29,7 @@ const fishSpecies = {
     proteinRequirement: { min: 38, max: 45 },
     harvestWeight: 400,
     harvestTime: 285, // in days
+    baseGrowthRate: 400 / 285, // ~1.40 per day
     marketValue: 8.50,
     availability: 'seasonal',
     consumerAcceptance: 'good',
