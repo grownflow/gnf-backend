@@ -43,7 +43,7 @@ for i in {1..10}; do
     echo "🎉 EVENT TRIGGERED!"
     echo "   Name: $EVENT_NAME"
     echo "   Description: $EVENT_DESC"
-    echo "   Turns Remaining: $TURNS_REMAINING"
+    echo "   Event Turns Remaining: $TURNS_REMAINING"
   else
     echo "   No event triggered"
   fi

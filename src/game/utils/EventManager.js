@@ -8,7 +8,14 @@ class EventManager {
    * @returns {Object|null} Event that triggered, or null
    */
   static checkForRandomEvent(G) {
-    // Don't trigger new events if one is already active
+
+    /*
+      Dont trigger new events if one is already active.
+      One event at a time for now to simplify testing.
+      TODO: Reclarify with team to confirm that multiple
+      events can occur in one day. 
+      - Ravon
+    */
     if (G.activeEvent && G.activeEvent.turnsRemaining > 0) {
       return null;
     }
