@@ -27,16 +27,6 @@ const EQUIPMENT = {
   fishTank: { cost: 150, type: 'system', description: 'Additional fish tank capacity' }
 };
 
-// Market prices for different products
-const MARKET_PRICES = {
-  // Fish prices (per pound)
-  tilapia: 3.00,
-  barramundi: 8.50,
-  
-  // Plant prices (per head)
-  ParrisIslandRomaine: 2.00
-};
-
 const economyMoves = {
   // Buy equipment or upgrades
   // Parameters: equipmentType, quantity
@@ -56,33 +46,30 @@ const economyMoves = {
       };
     }
 
-    // Deduct money
-    G.money -= totalCost;
-    
-    // Initialize equipment inventory if it doesn't exist
-    if (!G.equipment) {
-      G.equipment = {};
-    }
-    
-    // Add equipment to inventory
-    if (!G.equipment[equipmentType]) {
-      G.equipment[equipmentType] = 0;
-    }
-    G.equipment[equipmentType] += quantity;
-    
-    // Apply equipment benefits
-    const benefits = applyEquipmentBenefits(G, equipmentType, quantity);
-    
-    G.lastAction = { 
-      type: 'buyEquipment', 
-      equipmentType, 
-      quantity, 
-      cost: totalCost, 
-      success: true,
-      benefits 
+    // Calculate immutable updates
+    const updatedMoney = G.money - totalCost;
+    const updatedEquipment = {
+      ...(G.equipment || {}),
+      [equipmentType]: (G.equipment?.[equipmentType] || 0) + quantity
     };
     
-    return { ...G };
+    // Apply equipment benefits and get immutable updates
+    const { benefits, updates } = applyEquipmentBenefits(G, equipmentType, quantity);
+    
+    return {
+      ...G,
+      money: updatedMoney,
+      equipment: updatedEquipment,
+      ...updates,
+      lastAction: { 
+        type: 'buyEquipment', 
+        equipmentType, 
+        quantity, 
+        cost: totalCost, 
+        success: true,
+        benefits 
+      }
+    };
   },
 
   // Sell harvested fish
@@ -108,7 +95,7 @@ const economyMoves = {
       
       const value = fish.getMarketValue();
       totalValue = value;
-      fishSold.push({ type: fish.type, count: fish.count, value });
+      fishSold.push({ type: fish.type, weight: fish.size, value });
       
       // Remove fish from system
       G.fish.splice(fishIndex, 1);
@@ -130,7 +117,7 @@ const economyMoves = {
         if (fish.isHarvestable()) {
           const value = fish.getMarketValue();
           totalValue += value;
-          fishSold.push({ type: fish.type, count: fish.count, value });
+          fishSold.push({ type: fish.type, weight: fish.size, value });
           G.fish.splice(i, 1);
         }
       }
@@ -311,57 +298,76 @@ const economyMoves = {
 };
 
 // Helper function to apply equipment benefits
+// Returns { benefits: string[], updates: object } with immutable state updates
 function applyEquipmentBenefits(G, equipmentType, quantity) {
   const benefits = [];
+  const updates = {};
   
   switch (equipmentType) {
     case 'waterPump':
       // Improve water circulation
-      if (!G.waterSystem) G.waterSystem = {};
-      G.waterSystem.circulationEfficiency = (G.waterSystem.circulationEfficiency || 1.0) + (0.1 * quantity);
+      updates.waterSystem = {
+        ...(G.waterSystem || {}),
+        circulationEfficiency: (G.waterSystem?.circulationEfficiency || 1.0) + (0.1 * quantity)
+      };
       benefits.push('Improved water circulation');
       break;
       
     case 'airPump':
       // Increase oxygen levels
-      if (!G.waterSystem) G.waterSystem = {};
-      G.waterSystem.oxygenLevel = (G.waterSystem.oxygenLevel || 8.0) + (0.5 * quantity);
+      updates.waterSystem = {
+        ...(G.waterSystem || {}),
+        oxygenLevel: (G.waterSystem?.oxygenLevel || 8.0) + (0.5 * quantity)
+      };
       benefits.push('Increased oxygen levels');
       break;
       
-    case 'biofilter':
+    case 'biofilter': {
       // Improve nitrogen cycle efficiency
+      const { AquaponicsSystem } = require('../models/AquaponicsSystem');
       if (!G.aquaponicsSystem) {
-        const { AquaponicsSystem } = require('../models/AquaponicsSystem');
-        G.aquaponicsSystem = new AquaponicsSystem();
+        const newSystem = new AquaponicsSystem();
+        newSystem.biofilterEfficiency = 0.8 + (0.05 * quantity);
+        updates.aquaponicsSystem = newSystem;
+      } else {
+        // Create a new instance with updated efficiency, copying existing properties
+        const newSystem = new AquaponicsSystem();
+        // Copy existing properties from the old system
+        if (G.aquaponicsSystem.tank) newSystem.tank = G.aquaponicsSystem.tank;
+        if (G.aquaponicsSystem.growBeds) newSystem.growBeds = G.aquaponicsSystem.growBeds;
+        if (G.aquaponicsSystem.light) newSystem.light = G.aquaponicsSystem.light;
+        if (G.aquaponicsSystem.log) newSystem.log = G.aquaponicsSystem.log;
+        // Update biofilter efficiency
+        newSystem.biofilterEfficiency = Math.min(1.0, (G.aquaponicsSystem.biofilterEfficiency || 0.8) + (0.05 * quantity));
+        updates.aquaponicsSystem = newSystem;
       }
-      G.aquaponicsSystem.biofilterEfficiency = Math.min(1.0, (G.aquaponicsSystem.biofilterEfficiency || 0.8) + (0.05 * quantity));
       benefits.push('Improved nitrogen cycle efficiency');
       break;
+    }
       
     case 'growLight':
       // Improve plant growth
-      if (!G.systemModifiers) G.systemModifiers = {};
-      G.systemModifiers.plantGrowthRate = (G.systemModifiers.plantGrowthRate || 1.0) + (0.1 * quantity);
+      updates.systemModifiers = {
+        ...(G.systemModifiers || {}),
+        plantGrowthRate: (G.systemModifiers?.plantGrowthRate || 1.0) + (0.1 * quantity)
+      };
       benefits.push('Improved plant growth rate');
       break;
       
     case 'growBed':
       // Add growing capacity
-      if (!G.maxPlants) G.maxPlants = 10;
-      G.maxPlants += 5 * quantity;
+      updates.maxPlants = (G.maxPlants || 10) + (5 * quantity);
       benefits.push(`Added ${5 * quantity} plant growing capacity`);
       break;
       
     case 'fishTank':
       // Add fish capacity
-      if (!G.maxFish) G.maxFish = 20;
-      G.maxFish += 10 * quantity;
+      updates.maxFish = (G.maxFish || 20) + (10 * quantity);
       benefits.push(`Added ${10 * quantity} fish capacity`);
       break;
   }
   
-  return benefits;
+  return { benefits, updates };
 }
 
 module.exports = economyMoves;
