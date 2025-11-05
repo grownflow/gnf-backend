@@ -27,6 +27,7 @@ const EQUIPMENT = {
   fishTank: { cost: 150, type: 'system', description: 'Additional fish tank capacity' }
 };
 
+// Market prices for different products
 const economyMoves = {
   // Buy equipment or upgrades
   // Parameters: equipmentType, quantity
