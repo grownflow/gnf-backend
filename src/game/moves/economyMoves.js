@@ -28,14 +28,6 @@ const EQUIPMENT = {
 };
 
 // Market prices for different products
-const MARKET_PRICES = {
-  // Fish prices (per pound)
-  tilapia: 3.00,
-  barramundi: 8.50,
-  
-  // Plant prices (per head)
-  ParrisIslandRomaine: 2.00
-};
 
 const economyMoves = {
   // Buy equipment or upgrades
