@@ -5,6 +5,9 @@ router.get('/', (req, res) => {
   res.json({ message: 'API is running' });
 });
 
+// Auth routes
+router.use('/auth', require('./auth'));
+
 router.post('/games/:gameName/create', async (req, res) => {
   try {
     const result = await MatchHandler.create();
