@@ -43,7 +43,25 @@ const plantSpecies = {
         totalGrowthTime: 6,
         marketAcceptance: 'excellent',
         shelfLife: 7,
-        availability: 'year-round'
+        availability: 'year-round',
+        // Nutrient requirements (mg/L minimum thresholds)
+        nutrientRequirements: {
+            nitrogen: 5,      // Nitrate-nitrogen (NO3-N)
+            phosphorus: 3,    // P
+            potassium: 30,    // K
+            calcium: 50,      // Ca
+            magnesium: 15,    // Mg
+            iron: 1           // Fe
+        },
+        // Deficiency symptoms for visual feedback
+        deficiencySymptoms: {
+            nitrogen: 'yellowing_leaves',
+            phosphorus: 'burnt_edges',
+            potassium: 'scorched_margins_with_black_spots',
+            calcium: 'tip_burn_and_deformed_leaves',
+            magnesium: 'chlorosis_on_old_leaves',
+            iron: 'chlorosis_on_new_leaves'
+        }
     }
 };
 
