@@ -34,7 +34,7 @@ echo ""
 echo "Progressing 4 turns to watch plant growth..."
 for i in {1..4}; do
   echo ""
-  echo "Turn $i..."
+  echo "=== Turn $i ==="
   TURN_RESPONSE=$(curl -s -X POST "${API_URL}/games/${GAME_NAME}/${MATCH_ID}/move" \
     -H "Content-Type: application/json" \
     -d '{
@@ -42,39 +42,30 @@ for i in {1..4}; do
       "move": "progressTurn"
     }')
   
-  # Extract growth reports
-  echo "$TURN_RESPONSE" | jq -r '.G.lastAction | 
-    if .systemState and .systemState.growthReports then
-      "Growth Reports:",
-      (.systemState.growthReports[] | 
-        "  Bed \(.bedId): \(.plantCount) plants, total growth: \(.totalGrowth)",
-        if .growthReports then
-          (.growthReports[] | 
-            "    Plant \(.plantId): growth=\(.growthRate), maturity=\(.maturity)%, health=\(.health)",
-            if .deficiencies and (.deficiencies | length > 0) then
-              "      Deficiencies: \(.deficiencies | map(.nutrient + "(" + .severity + ")") | join(", "))"
-            else
-              "      No deficiencies"
-            end,
-            if .pHPenalty and (.pHPenalty > 0) then
-              "      pH penalty: \(.pHPenalty)"
-            else
-              empty
-            end
-          )
-        else
-          empty
-        end
-      ),
-      "Water Chemistry:",
-      (.systemState.waterStatus | 
-        "  N: \(.nitrate) mg/L, P: \(.phosphorus) mg/L, K: \(.potassium) mg/L",
-        "  Ca: \(.calcium) mg/L, Mg: \(.magnesium) mg/L, Fe: \(.iron) mg/L",
-        "  pH: \(.pH), Temp: \(.temperature)°C, DO: \(.dissolvedOxygen) mg/L"
-      )
-    else
-      "No growth data available"
-    end'
+  # Show plant status
+  echo ""
+  echo "Plant Status:"
+  echo "$TURN_RESPONSE" | jq '.G.plants[] | {
+    id,
+    type,
+    health,
+    maturity,
+    weeksGrown,
+    deficiencies
+  }'
+  
+  # Show water chemistry
+  echo ""
+  echo "Water Chemistry:"
+  echo "$TURN_RESPONSE" | jq '.G.aquaponicsSystem.tank.water | {
+    nitrate,
+    phosphorus,
+    potassium,
+    calcium,
+    magnesium,
+    iron,
+    pH
+  }'
   
   sleep 1
 done

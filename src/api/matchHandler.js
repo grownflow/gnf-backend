@@ -1,6 +1,7 @@
 const { getCollection } = require('../db');
 const { AquaponicsGame } = require('../game/game');
 const { Fish } = require('../game/models/Fish');
+const { Plant } = require('../game/models/Plant');
 const { AquaponicsSystem } = require('../game/models/AquaponicsSystem');
 const { Tank } = require('../game/models/Tank');
 const { GrowBed } = require('../game/models/GrowBed');
@@ -10,6 +11,14 @@ const { WaterChemistry } = require('../game/models/WaterChemistry');
 class MatchHandler {
   // Reconstruct class instances from plain objects
   static deserializeGameState(G) {
+    // First, reconstruct all plants
+    const plantsMap = new Map();
+    (G.plants || []).forEach(p => {
+      const plant = new Plant(p.id, p.type);
+      Object.assign(plant, p);
+      plantsMap.set(p.id, plant);
+    });
+    
     const deserialized = {
       ...G,
       gameTime: G.gameTime || 0,
@@ -17,6 +26,7 @@ class MatchHandler {
       fish: (G.fish || []).map(f => 
         Object.assign(new Fish(f.type, f.count), f)
       ),
+      plants: Array.from(plantsMap.values()),
     };
 
     // Reconstruct AquaponicsSystem if it exists
@@ -42,7 +52,25 @@ class MatchHandler {
         sys.growBeds = {};
         for (const [bedId, bedData] of Object.entries(G.aquaponicsSystem.growBeds)) {
           const bed = new GrowBed(bedData.id, bedData.plantType, bedData.capacity);
-          Object.assign(bed, bedData);
+          bed.nutrientDemand = bedData.nutrientDemand || 0;
+          
+          // Use the same plant instances from the plantsMap
+          if (bedData.plants) {
+            bed.plants = {};
+            for (const [plantId, plantData] of Object.entries(bedData.plants)) {
+              // Reuse the plant instance from plantsMap if it exists
+              const plant = plantsMap.get(plantData.id);
+              if (plant) {
+                bed.plants[plantId] = plant;
+              } else {
+                // Fallback: create new instance if not in map
+                const newPlant = new Plant(plantData.id, plantData.type);
+                Object.assign(newPlant, plantData);
+                bed.plants[plantId] = newPlant;
+              }
+            }
+          }
+          
           sys.growBeds[bedId] = bed;
         }
       }
@@ -115,7 +143,8 @@ class MatchHandler {
     }
 
     try {
-      const newG = move(match.G, match.ctx, ...args);
+      const moveArgs = args || [];
+      const newG = move(match.G, match.ctx, ...moveArgs);
       match.G = newG;
       match.ctx.turn++;
 
