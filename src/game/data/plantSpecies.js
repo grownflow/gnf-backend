@@ -32,6 +32,7 @@ const plantSpecies = {
         nutritionNeeds: 50,
         proteinRequirement: 32,
         valuePerHead: 2.00,
+        seedCost: 0.30, // Cost per seed
         valuePerM2: 32.00,
         valuePerM2PerWeek: 8.00,
         tempRange: { min: 10, max: 24, optimal: { min: 15, max: 20 } },

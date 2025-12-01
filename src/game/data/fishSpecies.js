@@ -16,6 +16,7 @@ const fishSpecies = {
     harvestTime: 210, // in days
     baseGrowthRate: 600 / 210, // ~2.86 per day
     marketValue: 3.00,
+    fingerlingCost: 2.50, // Cost per fingerling
     availability: 'year-round',
     consumerAcceptance: 'good',
     ammoniaProductionRate: 0.1,
@@ -31,6 +32,7 @@ const fishSpecies = {
     harvestTime: 285, // in days
     baseGrowthRate: 400 / 285, // ~1.40 per day
     marketValue: 8.50,
+    fingerlingCost: 6.00, // Cost per fingerling
     availability: 'seasonal',
     consumerAcceptance: 'good',
     ammoniaProductionRate: 0.08,

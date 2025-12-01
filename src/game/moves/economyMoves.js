@@ -5,39 +5,19 @@ const { Fish } = require('../models/Fish');
 const { Plant } = require('../models/Plant');
 const { fishSpecies } = require('../data/fishSpecies');
 const { plantSpecies } = require('../data/plantSpecies');
-
-// Equipment definitions with costs and benefits
-const EQUIPMENT = {
-  // Water quality equipment
-  phMeter: { cost: 50, type: 'monitoring', description: 'pH monitoring device' },
-  thermometer: { cost: 30, type: 'monitoring', description: 'Water temperature sensor' },
-  oxygenMeter: { cost: 80, type: 'monitoring', description: 'Dissolved oxygen sensor' },
-  
-  // Water treatment equipment
-  waterPump: { cost: 120, type: 'system', description: 'Improves water circulation' },
-  airPump: { cost: 60, type: 'system', description: 'Increases oxygen levels' },
-  biofilter: { cost: 200, type: 'system', description: 'Improves nitrogen cycle efficiency' },
-  
-  // Growing equipment
-  growLight: { cost: 100, type: 'growing', description: 'LED grow light for plants' },
-  growBed: { cost: 80, type: 'growing', description: 'Additional growing space' },
-  
-  // Fish equipment
-  fishFood: { cost: 20, type: 'consumable', description: 'High-quality fish food (10 units)' },
-  fishTank: { cost: 150, type: 'system', description: 'Additional fish tank capacity' }
-};
+const { equipment } = require('../data/equipment');
 
 // Market prices for different products
 const economyMoves = {
   // Buy equipment or upgrades
   // Parameters: equipmentType, quantity
   buyEquipment: (G, ctx, equipmentType, quantity = 1) => {
-    const equipment = EQUIPMENT[equipmentType];
-    if (!equipment) {
+    const item = equipment[equipmentType];
+    if (!item) {
       return { ...G, error: `Unknown equipment: ${equipmentType}` };
     }
 
-    const totalCost = equipment.cost * quantity;
+    const totalCost = item.cost * quantity;
     
     if (G.money < totalCost) {
       return { 
@@ -208,7 +188,7 @@ const economyMoves = {
   // Buy fish food
   // Parameters: quantity (in units of 10)
   buyFishFood: (G, ctx, quantity = 1) => {
-    const foodCost = EQUIPMENT.fishFood.cost * quantity;
+    const foodCost = equipment.fishFood.cost * quantity;
     
     if (G.money < foodCost) {
       return { 
@@ -290,11 +270,114 @@ const economyMoves = {
   getEquipmentCatalog: (G, ctx) => {
     G.lastAction = { 
       type: 'getEquipmentCatalog', 
-      equipment: EQUIPMENT,
+      equipment: equipment,
       success: true 
     };
     
     return { ...G };
+  },
+
+  // Buy fish fingerlings
+  // Parameters: fishType (e.g., 'tilapia', 'barramundi'), count
+  buyFish: (G, ctx, fishType, count = 1) => {
+    const species = fishSpecies[fishType.toLowerCase()];
+    if (!species) {
+      return { 
+        ...G, 
+        error: `Unknown fish species: ${fishType}`,
+        lastAction: { type: 'buyFish', fishType, success: false, reason: 'unknown_species' }
+      };
+    }
+
+    const totalCost = species.fingerlingCost * count;
+    
+    if (G.money < totalCost) {
+      return { 
+        ...G, 
+        error: `Insufficient funds. Need $${totalCost.toFixed(2)}, have $${G.money.toFixed(2)}`,
+        lastAction: { type: 'buyFish', fishType, count, success: false, reason: 'insufficient_funds' }
+      };
+    }
+
+    // Deduct money
+    const updatedMoney = G.money - totalCost;
+    
+    // Add fish to system
+    const { Fish } = require('../models/Fish');
+    const newFish = new Fish(fishType, count);
+    const updatedFish = [...G.fish, newFish];
+    
+    return {
+      ...G,
+      money: updatedMoney,
+      fish: updatedFish,
+      lastAction: { 
+        type: 'buyFish', 
+        fishType, 
+        count, 
+        cost: totalCost, 
+        success: true 
+      }
+    };
+  },
+
+  // Buy plant seeds and plant them in a grow bed
+  // Parameters: plantType (e.g., 'ParrisIslandRomaine'), bedLocation, count
+  buyPlantSeeds: (G, ctx, plantType, bedLocation, count = 1) => {
+    const species = plantSpecies[plantType];
+    if (!species) {
+      return { 
+        ...G, 
+        error: `Unknown plant species: ${plantType}`,
+        lastAction: { type: 'buyPlantSeeds', plantType, success: false, reason: 'unknown_species' }
+      };
+    }
+
+    const totalCost = species.seedCost * count;
+    
+    if (G.money < totalCost) {
+      return { 
+        ...G, 
+        error: `Insufficient funds. Need $${totalCost.toFixed(2)}, have $${G.money.toFixed(2)}`,
+        lastAction: { type: 'buyPlantSeeds', plantType, count, success: false, reason: 'insufficient_funds' }
+      };
+    }
+
+    // Deduct money
+    let updatedG = { ...G, money: G.money - totalCost };
+    
+    // Plant seeds in the grow bed
+    const { Plant } = require('../models/Plant');
+    const { GrowBed } = require('../models/GrowBed');
+    
+    const plantsAdded = [];
+    for (let i = 0; i < count; i++) {
+      const plant = new Plant(Date.now() + i, plantType);
+      plant.location = bedLocation;
+      plant.plantedAt = updatedG.gameTime;
+      
+      // Ensure grow bed exists
+      if (!updatedG.aquaponicsSystem.growBeds[bedLocation]) {
+        updatedG.aquaponicsSystem.growBeds[bedLocation] = new GrowBed(bedLocation, plantType, 16);
+      }
+      
+      const bed = updatedG.aquaponicsSystem.growBeds[bedLocation];
+      bed.addPlant(plant);
+      updatedG.plants.push(plant);
+      plantsAdded.push(plant.id);
+    }
+    
+    updatedG.lastAction = { 
+      type: 'buyPlantSeeds', 
+      plantType, 
+      bedLocation,
+      count, 
+      cost: totalCost,
+      plantsAdded,
+      success: true 
+    };
+    
+    return updatedG;
   }
 };
 
