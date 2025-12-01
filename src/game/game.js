@@ -21,7 +21,14 @@ const AquaponicsGame = {
 
     // Game mechanics and player resources
     gameTime: 0,    // DAYS since game start
-    money: 500      // Player currency for purchases and upgrades
+    money: 500,     // Player currency for purchases and upgrades
+    
+    // Utility bills tracking
+    billsAccrued: {
+      electricity: 0, // Accumulated electricity costs
+      water: 0        // Accumulated water costs
+    },
+    lastBillPaid: 0   // Game day of last bill payment
   }),
 
   // Import all moves from the modular move files

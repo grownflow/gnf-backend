@@ -50,6 +50,52 @@ const EVENTS = {
     duration: 5,
     probability: 0.06,
     severity: 'medium'
+  },
+
+  // System Damage Events
+  waterLeak: {
+    id: 'waterLeak',
+    type: EVENT_TYPES.TECHNICAL,
+    name: 'Water Leak',
+    description: 'A leak has developed in your tank',
+    cause: 'Wear and tear on tank seals',
+    effects: {
+      waterLossPerTurn: 50 // liters per day
+    },
+    duration: 999, // Lasts until repaired
+    probability: 0.04, // 4% chance per turn
+    severity: 'high',
+    repairCost: 75
+  },
+
+  pumpFailure: {
+    id: 'pumpFailure',
+    type: EVENT_TYPES.TECHNICAL,
+    name: 'Pump Failure',
+    description: 'Your water pump has stopped working',
+    cause: 'Motor burnout',
+    effects: {
+      circulationStopped: true
+    },
+    duration: 999, // Lasts until repaired
+    probability: 0.03, // 3% chance per turn
+    severity: 'high',
+    repairCost: 100
+  },
+
+  filterClog: {
+    id: 'filterClog',
+    type: EVENT_TYPES.TECHNICAL,
+    name: 'Filter Clog',
+    description: 'Your biofilter is clogged with debris',
+    cause: 'Accumulated waste',
+    effects: {
+      biofilterEfficiencyReduction: 0.5 // Reduces efficiency by 50%
+    },
+    duration: 999, // Lasts until repaired
+    probability: 0.05, // 5% chance per turn
+    severity: 'medium',
+    repairCost: 50
   }
 };
 

@@ -4,6 +4,7 @@ class Tank {
   constructor(volumeLiters = 1000) {
     this.id = `tank_${Date.now()}`;
     this.volumeLiters = volumeLiters;
+    this.currentWaterLevel = volumeLiters; // Starts full
     this.water = new WaterChemistry();
     this.biofilterEfficiency = 0.8;
     this.log = [];
@@ -34,6 +35,8 @@ class Tank {
     return {
       id: this.id,
       volumeLiters: this.volumeLiters,
+      currentWaterLevel: this.currentWaterLevel,
+      waterLevelPercent: Number(((this.currentWaterLevel / this.volumeLiters) * 100).toFixed(1)),
       water: this.water.getStatus()
     };
   }

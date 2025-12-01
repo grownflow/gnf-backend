@@ -91,6 +91,25 @@ class EventManager {
       if (effects.lightsDisabled !== undefined) {
         G.eventEffects.lightsDisabled = effects.lightsDisabled;
       }
+      
+      // Apply water leak effect
+      if (effects.waterLossPerTurn !== undefined && G.aquaponicsSystem && G.aquaponicsSystem.tank) {
+        const tank = G.aquaponicsSystem.tank;
+        tank.currentWaterLevel = Math.max(0, tank.currentWaterLevel - effects.waterLossPerTurn);
+        G.eventEffects.waterLossPerTurn = effects.waterLossPerTurn;
+      }
+      
+      // Apply pump failure effect
+      if (effects.circulationStopped !== undefined) {
+        G.eventEffects.circulationStopped = effects.circulationStopped;
+      }
+      
+      // Apply filter clog effect
+      if (effects.biofilterEfficiencyReduction !== undefined && G.aquaponicsSystem && G.aquaponicsSystem.tank) {
+        const originalEfficiency = G.aquaponicsSystem.tank.biofilterEfficiency || 0.8;
+        G.aquaponicsSystem.tank.biofilterEfficiency = originalEfficiency * (1 - effects.biofilterEfficiencyReduction);
+        G.eventEffects.biofilterEfficiencyReduction = effects.biofilterEfficiencyReduction;
+      }
     }
 
     // Apply social/economic effects
