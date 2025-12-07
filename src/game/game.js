@@ -21,7 +21,7 @@ const AquaponicsGame = {
 
     // Game mechanics and player resources
     gameTime: 0,    // DAYS since game start
-    money: 500,     // Player currency for purchases and upgrades
+    money: 5000,    // Player currency for purchases and upgrades
     
     // Utility bills tracking
     billsAccrued: {

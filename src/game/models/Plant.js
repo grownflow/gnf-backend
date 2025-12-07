@@ -11,7 +11,8 @@ class Plant {
     
     this.size = 1;
     this.health = 100;
-    this.weeksGrown = 0;
+    this.daysGrown = 0; // Days since planting
+    this.weeksGrown = 0; // Calculated from daysGrown
     this.maturity = 0; // 0 to 100%
     this.deficiencies = []; // Array of active deficiency symptoms
   }
@@ -129,9 +130,10 @@ class Plant {
     // Ensure growth rate doesn't go negative
     growthRate = Math.max(0, growthRate);
 
-    // Update plant state
-    this.weeksGrown += 1;
-    this.maturity += (100 / this.species.growthPeriod) * growthRate;
+    // Update plant state (one day of growth)
+    this.daysGrown += 1;
+    this.weeksGrown = Math.floor(this.daysGrown / 7); // Update weeks for UI
+    this.maturity += (100 / (this.species.growthPeriod * 7)) * growthRate; // Growth over total days
     this.maturity = Math.min(100, this.maturity);
     
     // Health decreases with deficiencies
@@ -153,7 +155,9 @@ class Plant {
   }
 
   canHarvest() {
-    return this.weeksGrown >= this.species.growthPeriod;
+    // Check if plant has grown for the full growth period (in days)
+    const daysRequired = this.species.growthPeriod * 7;
+    return this.daysGrown >= daysRequired;
   }
 
   getMarketValue() {

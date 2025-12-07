@@ -40,21 +40,23 @@ describe('Plant Model', () => {
       
       expect(result.success).toBe(true);
       expect(result.growthRate).toBe(1.0);
-      expect(result.weeksGrown).toBe(1);
-      expect(result.maturity).toBe(25); // 100% / 4 weeks = 25% per week
+      expect(plant.daysGrown).toBe(1);
+      expect(result.weeksGrown).toBe(0); // 1 day = 0 weeks (floor(1/7))
+      expect(result.maturity).toBeCloseTo(3.57, 1); // 100% / 28 days = 3.57% per day
       expect(result.health).toBe(100);
       expect(result.deficiencies).toEqual([]);
       expect(result.pHPenalty).toBe(0);
     });
 
     test('should reach maturity after growth period', () => {
-      // Grow for 4 weeks (full growth period)
-      for (let i = 0; i < 4; i++) {
+      // Grow for 28 days (full growth period for 4-week crop)
+      for (let i = 0; i < 28; i++) {
         plant.grow(optimalWater, true);
       }
       
-      expect(plant.weeksGrown).toBe(4);
-      expect(plant.maturity).toBe(100);
+      expect(plant.daysGrown).toBe(28);
+      expect(plant.weeksGrown).toBe(4); // floor(28/7)
+      expect(plant.maturity).toBeCloseTo(100, 0);
       expect(plant.canHarvest()).toBe(true);
     });
 
@@ -254,8 +256,8 @@ describe('Plant Model', () => {
     });
 
     test('should harvest mature healthy plants at full value', () => {
-      // Grow to maturity with optimal conditions
-      for (let i = 0; i < 4; i++) {
+      // Grow to maturity with optimal conditions (28 days)
+      for (let i = 0; i < 28; i++) {
         plant.grow(optimalWater, true);
       }
       
@@ -268,11 +270,11 @@ describe('Plant Model', () => {
     });
 
     test('should reduce harvest value for unhealthy plants', () => {
-      // Grow with deficiencies
+      // Grow with deficiencies (28 days)
       optimalWater.nitrate = 1;
       optimalWater.phosphorus = 0.5;
       
-      for (let i = 0; i < 4; i++) {
+      for (let i = 0; i < 28; i++) {
         plant.grow(optimalWater, true);
       }
       
@@ -286,6 +288,7 @@ describe('Plant Model', () => {
     test('should categorize harvest quality based on health', () => {
       // Test different health levels
       plant.health = 85;
+      plant.daysGrown = 28; // 4 weeks * 7 days
       plant.weeksGrown = 4;
       let result = plant.harvest();
       expect(result.quality).toBe('excellent');
@@ -317,12 +320,12 @@ describe('Plant Model', () => {
       expect(result.growthRate).toBeGreaterThanOrEqual(0);
     });
 
-    test('should progress weeks even with zero growth', () => {
+    test('should progress days even with zero growth', () => {
       optimalWater.nitrate = 0;
       
       const result = plant.grow(optimalWater, true);
       
-      expect(plant.weeksGrown).toBe(1);
+      expect(plant.daysGrown).toBe(1);
       expect(result.growthRate).toBeGreaterThanOrEqual(0);
     });
   });
