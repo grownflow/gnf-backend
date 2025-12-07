@@ -149,15 +149,15 @@ const systemMoves = {
 
 // Calculate daily utility costs based on equipment and system state
 function calculateDailyUtilityCosts(G) {
-  let electricityCost = 5.0; // Base electricity cost
-  let waterCost = 2.0; // Base water cost
+  let electricityCost = 0.5; // Base electricity cost (reduced from 5.0)
+  let waterCost = 0.2; // Base water cost (reduced from 2.0)
   
   // Add electricity costs from owned equipment
   if (G.equipment) {
     Object.entries(G.equipment).forEach(([equipmentType, quantity]) => {
       const equipmentData = equipment[equipmentType];
       if (equipmentData && equipmentData.dailyElectricityCost) {
-        electricityCost += equipmentData.dailyElectricityCost * quantity;
+        electricityCost += (equipmentData.dailyElectricityCost * 0.1) * quantity; // 10% of equipment cost
       }
     });
   }
@@ -165,12 +165,12 @@ function calculateDailyUtilityCosts(G) {
   // Add water costs based on tank volume
   if (G.aquaponicsSystem && G.aquaponicsSystem.tank) {
     const tankVolume = G.aquaponicsSystem.tank.volumeLiters || 1000;
-    waterCost += tankVolume / 200; // 1000L tank = $5/day water
+    waterCost += tankVolume / 2000; // 1000L tank = $0.50/day water (reduced from $5)
   }
   
   // Add extra water cost if there's an active leak
   if (G.activeEvent && G.activeEvent.effects && G.activeEvent.effects.waterLossPerTurn) {
-    waterCost += 15; // Leak penalty
+    waterCost += 2; // Leak penalty (reduced from 15)
   }
   
   return { electricity: electricityCost, water: waterCost };
