@@ -32,6 +32,7 @@ const plantSpecies = {
         nutritionNeeds: 50,
         proteinRequirement: 32,
         valuePerHead: 2.00,
+        seedCost: 0.30, // Cost per seed
         valuePerM2: 32.00,
         valuePerM2PerWeek: 8.00,
         tempRange: { min: 10, max: 24, optimal: { min: 15, max: 20 } },
@@ -43,7 +44,25 @@ const plantSpecies = {
         totalGrowthTime: 6,
         marketAcceptance: 'excellent',
         shelfLife: 7,
-        availability: 'year-round'
+        availability: 'year-round',
+        // Nutrient requirements (mg/L minimum thresholds)
+        nutrientRequirements: {
+            nitrogen: 5,      // Nitrate-nitrogen (NO3-N)
+            phosphorus: 3,    // P
+            potassium: 30,    // K
+            calcium: 50,      // Ca
+            magnesium: 15,    // Mg
+            iron: 1           // Fe
+        },
+        // Deficiency symptoms for visual feedback
+        deficiencySymptoms: {
+            nitrogen: 'yellowing_leaves',
+            phosphorus: 'burnt_edges',
+            potassium: 'scorched_margins_with_black_spots',
+            calcium: 'tip_burn_and_deformed_leaves',
+            magnesium: 'chlorosis_on_old_leaves',
+            iron: 'chlorosis_on_new_leaves'
+        }
     }
 };
 

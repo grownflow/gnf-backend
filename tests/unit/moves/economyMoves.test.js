@@ -224,7 +224,8 @@ describe('Economy Moves', () => {
 
     test('should return error when plant is not harvestable', () => {
       const plant = new Plant('plant-1', 'ParrisIslandRomaine');
-      plant.weeksGrown = 2; // Below growth period
+      plant.daysGrown = 14; // Below growth period (28 days needed)
+      plant.weeksGrown = 2;
       G.plants = [plant];
       
       const result = economyMoves.sellPlants(G, ctx, 'plant-1');
@@ -237,7 +238,8 @@ describe('Economy Moves', () => {
 
     test('should successfully sell specific harvestable plant', () => {
       const plant = new Plant('plant-1', 'ParrisIslandRomaine');
-      plant.weeksGrown = 10; // Above growth period (harvestable)
+      plant.daysGrown = 70; // Above growth period (harvestable)
+      plant.weeksGrown = 10;
       G.plants = [plant];
       
       const result = economyMoves.sellPlants(G, ctx, 'plant-1');
@@ -253,7 +255,8 @@ describe('Economy Moves', () => {
 
     test('should return error when no harvestable plants exist (sell all)', () => {
       const plant = new Plant('plant-1', 'ParrisIslandRomaine');
-      plant.weeksGrown = 2; // Not harvestable
+      plant.daysGrown = 14; // Not harvestable
+      plant.weeksGrown = 2;
       G.plants = [plant];
       
       const result = economyMoves.sellPlants(G, ctx);
@@ -266,13 +269,16 @@ describe('Economy Moves', () => {
 
     test('should sell all harvestable plants when no ID specified', () => {
       const plant1 = new Plant('plant-1', 'ParrisIslandRomaine');
-      plant1.weeksGrown = 10; // Harvestable
+      plant1.daysGrown = 70; // Harvestable (>28 days for 4-week crop)
+      plant1.weeksGrown = 10;
       
       const plant2 = new Plant('plant-2', 'ParrisIslandRomaine');
-      plant2.weeksGrown = 12; // Harvestable
+      plant2.daysGrown = 84; // Harvestable
+      plant2.weeksGrown = 12;
       
       const plant3 = new Plant('plant-3', 'ParrisIslandRomaine');
-      plant3.weeksGrown = 3; // Not harvestable
+      plant3.daysGrown = 21; // Not harvestable (<28 days)
+      plant3.weeksGrown = 3;
       
       G.plants = [plant1, plant2, plant3];
       
@@ -289,7 +295,8 @@ describe('Economy Moves', () => {
 
     test('should add correct money amount when selling plants', () => {
       const plant = new Plant('plant-1', 'ParrisIslandRomaine');
-      plant.weeksGrown = 10; // Harvestable
+      plant.daysGrown = 70; // Harvestable
+      plant.weeksGrown = 10;
       G.plants = [plant];
       G.money = 100;
       

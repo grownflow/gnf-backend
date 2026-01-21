@@ -25,19 +25,45 @@ class GrowBed {
     return this.nutrientDemand;
   }
 
-  growAll(waterStatus) {
+  growAll(waterChemistry, lightAvailable = true) {
     let totalGrowth = 0;
-    let totalNutrients = 0;
+    const growthReports = [];
+    let totalNutrientConsumption = {
+      nitrogen: 0,
+      phosphorus: 0,
+      potassium: 0,
+      calcium: 0,
+      magnesium: 0,
+      iron: 0
+    };
 
     Object.values(this.plants).forEach(plant => {
-      plant.weeksGrown += 1;
-      totalGrowth += 1;
-      totalNutrients += 0.05;
+      const report = plant.grow(waterChemistry, lightAvailable);
+      growthReports.push({
+        plantId: plant.id,
+        ...report
+      });
+      
+      if (report.success) {
+        totalGrowth += report.growthRate;
+        
+        // Calculate nutrient consumption based on growth rate
+        // Each plant consumes nutrients proportional to its growth
+        const consumptionRate = report.growthRate * 0.1; // 10% of growth rate per week
+        totalNutrientConsumption.nitrogen += plant.species.nutrientRequirements.nitrogen * consumptionRate;
+        totalNutrientConsumption.phosphorus += plant.species.nutrientRequirements.phosphorus * consumptionRate;
+        totalNutrientConsumption.potassium += plant.species.nutrientRequirements.potassium * consumptionRate;
+        totalNutrientConsumption.calcium += plant.species.nutrientRequirements.calcium * consumptionRate;
+        totalNutrientConsumption.magnesium += plant.species.nutrientRequirements.magnesium * consumptionRate;
+        totalNutrientConsumption.iron += plant.species.nutrientRequirements.iron * consumptionRate;
+      }
     });
 
     return {
       totalGrowth: Number(totalGrowth.toFixed(2)),
-      totalNutrients: Number(totalNutrients.toFixed(3))
+      totalNutrientConsumption,
+      growthReports,
+      plantCount: Object.keys(this.plants).length
     };
   }
 
